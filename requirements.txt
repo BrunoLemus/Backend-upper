@@ -1,4 +1,6 @@
-﻿annotated-types==0.7.0
+gunicorn
+flask
+annotated-types==0.7.0
 anyio==4.4.0
 asgiref==3.7.2
 bcrypt==4.3.0
@@ -79,4 +81,5 @@ usb==0.0.83.dev0
 uvicorn==0.30.5
 watchfiles==0.22.0
 websockets==12.0
+
 
