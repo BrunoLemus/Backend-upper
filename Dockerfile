@@ -1,39 +1,24 @@
-# Usa una imagen base de Python 3.12 (compatible con PyO3)
+# 1. SOLUCIÓN PY: Usa Python 3.12 para evitar el error pyo3-ffi (3.13)
 FROM python:3.12-slim
 
-# Establece la variable de entorno CARGO_HOME a una ruta escribible
-# Esto resuelve el error "Read-only file system" de maturin/cargo
+# 2. SOLUCIÓN CARGO: Establece variables de entorno escribibles
 ENV CARGO_HOME="/tmp/.cargo"
-
-# Establece la variable de entorno para forzar la compatibilidad ABI3, aunque
-# ya bajamos la versión de Python, es una buena práctica de contingencia
 ENV PYO3_USE_ABI3_FORWARD_COMPATIBILITY=1
 
-# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Instala las dependencias del sistema operativo necesarias para compilar paquetes
-# nativos (como greenlet y pydantic-core)
+# 3. SOLUCIÓN APT/GREENLET: Instala dependencias del sistema operativo (en la fase de imagen)
+# Esto resuelve el error de 'Read-only file system'
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     build-essential \
     python3-dev \
-    # Si usas bases de datos como PostgreSQL o MySQL, añade sus librerías aquí.
-    # Por ejemplo, para MySQL: default-libmysqlclient-dev
     && rm -rf /var/lib/apt/lists/*
 
-# Copia el archivo de dependencias y el archivo Cargo.toml (si existe)
-# Esto optimiza la caché de Docker.
+# 4. INSTALACIÓN DE PYTHON
 COPY requirements.txt .
-
-# Instala las dependencias de Python
-# La opción --no-cache-dir ayuda a mantener la imagen pequeña
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia el resto del código de tu aplicación
+# 5. EJECUCIÓN
 COPY . .
-
-# Comando para iniciar la aplicación (AJUSTAR SEGÚN TU APLICACIÓN)
-# Esto asume que usas Gunicorn para ejecutar una aplicación llamada 'app'
-# Asegúrate de usar la variable de entorno $PORT
 CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:${PORT}", "app:app"]
