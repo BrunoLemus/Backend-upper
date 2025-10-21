@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "mysql+mysqlconnector://root:1234@localhost/bd_etiqueta_upper"
+DATABASE_URL = "postgresql://upper:2SoYBr1Oot4GC2ZQvhhTu9uNaOZtyux4@dpg-d3rtr663jp1c73eglgu0-a.oregon-postgres.render.com/bd_etiqueta_upper"
 
 
 
