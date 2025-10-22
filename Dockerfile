@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 # 4. INSTALACIÓN DE PYTHON
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements_test.txt
 
 # 5. EJECUCIÓN
 COPY . .
