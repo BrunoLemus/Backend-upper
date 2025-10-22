@@ -29,4 +29,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. EJECUCIÓN
 COPY . .
 
-ENTRYPOINT ["python", "-m", "gunicorn", "app.main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:$PORT"]
+# ... (líneas anteriores del Dockerfile) ...
+# Esta es la línea de inicio que usa la estructura de tu proyecto: app/main.py
+ENTRYPOINT ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "$PORT"]
