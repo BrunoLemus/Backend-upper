@@ -1,9 +1,7 @@
-fastapi
-uvicorn[standard]
-gunicorn
-python-dotenv
-sqlalchemy
-pydantic
+fastapi==0.111.0
+uvicorn==0.30.5
+gunicorn==21.2.0
+
 
 annotated-types==0.7.0
 anyio==4.4.0
@@ -87,6 +85,7 @@ usb==0.0.83.dev0
 uvicorn==0.30.5
 watchfiles==0.22.0
 websockets==12.0
+
 
 
 
