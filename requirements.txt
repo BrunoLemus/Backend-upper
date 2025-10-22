@@ -1,6 +1,7 @@
 fastapi==0.111.0
 uvicorn==0.30.5
 gunicorn==21.2.0
+psycopg2-binary
 
 
 annotated-types==0.7.0
@@ -85,6 +86,7 @@ usb==0.0.83.dev0
 uvicorn==0.30.5
 watchfiles==0.22.0
 websockets==12.0
+
 
 
 
