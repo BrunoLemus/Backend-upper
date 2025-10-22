@@ -21,8 +21,7 @@ from app.api.routes import user_practicante_mx
 from app.api.routes import user_coordinador_mx
 from app.api.routes import caja_mx
 
-import win32print
-import win32ui
+
 
 app = FastAPI(title="API de Etiquetas - Cajas")
 
