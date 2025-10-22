@@ -28,4 +28,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. EJECUCIÓN
 COPY . .
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:${PORT}", "app:app"]
+# Comando de inicio de producción con Gunicorn/Uvicorn
+CMD gunicorn app.main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
