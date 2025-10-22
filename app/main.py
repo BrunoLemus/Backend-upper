@@ -28,7 +28,8 @@ app = FastAPI(title="API de Etiquetas - Cajas")
 origins = [
     "http://localhost:8080",
     "http://192.168.48.32:8080",
-    "http://127.0.0.1:8080"
+    "http://127.0.0.1:8080",
+    "https://upper-36l1.onrender.com/"
 ]
 
 # Middleware CORS
