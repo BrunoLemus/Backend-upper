@@ -25,13 +25,22 @@ from app.api.routes import caja_mx
 
 app = FastAPI(title="API de Etiquetas - Cajas")
 
+
+
 origins = [
+    # Origen de su FRONT-END (El dominio que hace la solicitud POST)
+    "https://upper-36l1.onrender.com", 
+    
+    # Dominios de prueba locales
     "http://localhost:8080",
     "http://192.168.48.32:8080",
     "http://127.0.0.1:8080",
     "http://127.0.0.1:8001",
-    "https://upper-36l1.onrender.com",
     
+    # AGREGAR ESTA LÍNEA SOLO SI ES NECESARIO (aunque no es común, 
+    # a veces resuelve problemas con el mismo dominio de alojamiento)
+    "https://backend-upper.onrender.com",
+    "https://*.onrender.com", # Comodín para cualquier subdominio de Render (más amplio)
 ]
 
 # Middleware CORS
@@ -42,6 +51,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+
 
 # Crear tablas (ejecuta esto al inicio, solo para desarrollo)
 database.Base.metadata.create_all(bind=database.engine)
