@@ -29,9 +29,9 @@ origins = [
     "http://localhost:8080",
     "http://192.168.48.32:8080",
     "http://127.0.0.1:8080",
-    "http://127.0.0.1:8001"
+    "http://127.0.0.1:8001",
     "https://upper-36l1.onrender.com",
-    "https://backend-upper.onrender.com"
+    
 ]
 
 # Middleware CORS
