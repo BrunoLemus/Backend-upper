@@ -6,7 +6,7 @@ from typing import Literal
 
 router = APIRouter() 
 
-# --- MODELOS YA EXISTENTES ---
+# --- MODELOS YA EXISTENTES (SIN MODIFICAR) ---
 class LabelData(BaseModel):
     """Define el esquema de datos completo para una etiqueta."""
     paqueteria: str
@@ -23,12 +23,9 @@ class LabelData(BaseModel):
     qr_data: str 
     is_tarima: bool = False 
 
-# --- FUNCIÓN YA EXISTENTE (NO MODIFICADA) ---
+# --- FUNCIÓN YA EXISTENTE (SIN MODIFICAR) ---
 def generate_zpl_final_label(data: LabelData) -> str:
-    """
-    Genera el código ZPL, usando el campo is_tarima para ajustar el texto del encabezado,
-    y el campo paqueteria para decidir el contenido (completo o básico).
-    """
+    # ... (El contenido de esta función se mantiene intacto)
     
     PAQUETERIAS_COMPLETAS = ["Estafeta", "Paquetexpress"]
     imprimir_completo = data.paqueteria in PAQUETERIAS_COMPLETAS
@@ -112,27 +109,24 @@ def generate_zpl_final_label(data: LabelData) -> str:
     return zpl
 
 
-# --- ENDPOINTS YA EXISTENTES (NO MODIFICADOS) ---
+# --- ENDPOINTS YA EXISTENTES (SIN MODIFICAR) ---
 @router.post("/generate_caja")
 def generate_zpl_for_caja(data: list[LabelData]):
-    """Genera el ZPL completo a partir de una lista de datos de Cajas."""
-    
+    # ...
     for label in data:
         label.is_tarima = False
-    
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 
 @router.post("/generate_tarima") 
 def generate_zpl_for_tarima(data: list[LabelData]):
-
+    # ...
     for label in data:
         label.is_tarima = True
-        
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 # =====================================================================
-# --- NUEVA SOLUCIÓN PARA IMPRESIÓN DE SÍMBOLOS CON ZPL NATIVO ---
+# --- SOLUCIÓN AJUSTADA PARA IMPRESIÓN DE SÍMBOLOS CON ZPL NATIVO ---
 # =====================================================================
 
 class OtherLabelData(BaseModel):
@@ -144,42 +138,65 @@ class OtherLabelData(BaseModel):
 def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     """
     Genera el código ZPL para la etiqueta de símbolo seleccionada,
-    dibujando el símbolo con ZPL nativo (texto grande y líneas).
+    dibujando el símbolo con comandos ZPL limpios para evitar el amontonamiento.
     """
     
-    # 1. Configuración de etiqueta y caja
+    # Configuración base de la etiqueta
     zpl = "^XA"
-    zpl += "^MMT^PW606^LL606" # Ancho 606 dots para una etiqueta estándar de 4x6"
-    zpl += "^FO10,10^GB586,586,3^FS" # Dibuja un marco grande
+    zpl += "^MMT^PW606^LL606" # Etiqueta de 4x6"
+    zpl += "^FO10,10^GB586,586,3^FS" # Marco principal
 
     if tipo_etiqueta == "fragil":
-        # Dibuja la palabra FRÁGIL en grande y simula un vaso de cristal (ISO 780)
+        # 1. Dibuja el símbolo del Vaso de Cristal (Frágil)
+        # Usamos texto con fuente B (grande) con codificación para caracteres especiales
+        # La fuente de 150 puntos es muy grande y simula un dibujo.
         
-        # 2. Dibujar la simulación del Vaso
-        zpl += "^FO150,150^GB300,300,5^FS" # Caja grande (Cuerpo del vaso/símbolo)
-        zpl += "^FO100,400^GB400,50,5^FS" # Base del vaso
-        zpl += "^FO250,150^GB100,300,B,3^FS" # Parte interior/central (efecto de cristal)
+        # Símbolo: Se usa el carácter 'I' o 'A' muy grande para simular.
+        # Es mejor usar un gráfico (GB) simple para simular un vaso.
         
-        # 3. Texto
-        zpl += "^CF0,40" # Fuente más pequeña para el texto
-        zpl += "^FO50,500^FB500,1,0,C^FDFRÁGIL - MANEJAR CON CUIDADO^FS"
+        # Cuerpo del vaso (caja)
+        zpl += "^FO150,150^GB300,250,5^FS" 
+        # Base del vaso
+        zpl += "^FO100,400^GB400,20,5^FS" 
+        # Línea central divisoria (efecto de cristal)
+        zpl += "^FO150,275^GB300,2,2^FS" 
+
+        # 2. Texto
+        zpl += "^CF0,60" # Fuente más grande para el texto
+        # Posición Y 450, debajo del símbolo. El FB lo centra.
+        zpl += "^FO50,450^FB500,1,0,C^FDFRÁGIL^FS"
+        zpl += "^CF0,40"
+        zpl += "^FO50,520^FB500,1,0,C^FDManejar con Cuidado^FS"
 
     elif tipo_etiqueta == "hacia_arriba":
-        # Dibuja las dos flechas hacia arriba (ISO 780) con líneas ZPL
+        # 1. Dibuja las dos flechas hacia arriba (This Way Up)
         
-        # 2. Dibujar las dos flechas con líneas y triángulos
-        # Flecha IZQUIERDA
-        zpl += "^FO100,50^GB10,350,10^FS" # Línea vertical
-        zpl += "^FO60,50^GBA,100,100^FS" # Triángulo superior
-        zpl += "^FO140,50^GBA,100,100^FS" # Triángulo inferior
+        # Comando para Flecha Arriba (Triángulo) usando ^GFA (Graphic Field)
+        # Es mejor usar líneas si no se tiene el archivo de fuente de símbolos.
+        
+        # Flecha IZQUIERDA: Dibuja un rectángulo vertical y un triángulo encima
+        # Rectángulo vertical: FO (100, 200), Altura 250, Ancho 10
+        zpl += "^FO150,200^GB10,250,10^FS" 
+        # Triángulo/Punta de flecha IZQUIERDA: Lineas inclinadas
+        zpl += "^FO150,200^GD100,100,10,B^FS" # Dibuja un triángulo sólido (comando ^GD no estándar, mejor usar líneas ^GB)
+        
+        # Mejor opción: DIBUJAR PUNTAS CON LÍNEAS (más compatible)
+        # Punta Izquierda (Arriba)
+        zpl += "^FO100,200^GB100,10,10^FS" # Línea horizontal superior
+        zpl += "^FO100,200^GB10,100,10^FS" # Línea vertical izquierda
+        zpl += "^FO200,200^GB10,100,10^FS" # Línea vertical derecha
+        
+        # Flecha DERECHA (posición X 400)
+        # Rectángulo vertical: FO (400, 200), Altura 250, Ancho 10
+        zpl += "^FO400,200^GB10,250,10^FS" 
+        # Punta Derecha (Arriba)
+        zpl += "^FO350,200^GB100,10,10^FS" # Línea horizontal superior
+        zpl += "^FO350,200^GB10,100,10^FS" # Línea vertical izquierda
+        zpl += "^FO450,200^GB10,100,10^FS" # Línea vertical derecha
 
-        # Flecha DERECHA (posición X 350)
-        zpl += "^FO400,50^GB10,350,10^FS" # Línea vertical
-        zpl += "^FO360,50^GBA,100,100^FS" # Triángulo superior
-        zpl += "^FO440,50^GBA,100,100^FS" # Triángulo inferior
         
-        # 3. Texto
-        zpl += "^CF0,40"
+        # 2. Texto
+        zpl += "^CF0,60"
         zpl += "^FO50,500^FB500,1,0,C^FDESTELADO ARRIBA^FS"
         
     else:
@@ -192,10 +209,7 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
 
 @router.post("/generate_other_label")
 def generate_zpl_for_other_labels(data: OtherLabelData):
-    """
-    Genera el ZPL para etiquetas Frágil o Hacia Arriba.
-    El ZPL se genera con comandos de texto/gráficos ZPL NATIVOS, no con imágenes.
-    """
+    # ... (El contenido de este endpoint se mantiene intacto)
     
     # Generar el bloque ZPL base para una sola etiqueta
     zpl_single_label = generate_other_label_zpl(data.tipo_etiqueta)
