@@ -126,7 +126,7 @@ def generate_zpl_for_tarima(data: list[LabelData]):
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 # =====================================================================
-# --- SOLUCIÓN AJUSTADA PARA FLECHAS CLARAS ---
+# --- SOLUCIÓN AJUSTADA PARA FLECHAS CLARAS Y COMPLETAS ---
 # =====================================================================
 
 class OtherLabelData(BaseModel):
@@ -165,37 +165,32 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     elif tipo_etiqueta == "hacia_arriba":
         # 1. Dibuja las dos flechas hacia arriba (This Way Up)
         
-        # Comando de Triángulo (Graphic Diagonal) con relleno sólido: ^GDw,h,t,c,s
-        # ^GD se comporta como un comando de dibujo de línea diagonal.
-        # Para triángulos sólidos, usamos ^GD con el ancho y alto igual, y un relleno.
-        # Es más fiable usar el comando ^GFA con datos, pero ^GD es más simple para geometrías básicas.
-        
-        # Usaremos el comando ^GFA para dibujar un triángulo sólido que es más reconocido como flecha.
-        # Esta es la forma más profesional de enviar un gráfico sin depender de fuentes de símbolos.
-        
         # ----------------------------------------------------
-        # DIBUJA 2 TRIÁNGULOS SÓLIDOS (MÉTODO ZPL SIMPLE)
+        # DIBUJA 2 FLECHAS USANDO 3 RECTÁNGULOS POR FLECHA (MÁS COMPATIBLE)
         # ----------------------------------------------------
-
-        # Parámetros para un triángulo apuntando hacia arriba (una flecha grande)
-        # FOx,y (Posición de inicio)
-        # GDw,h,t,B (Ancho, Alto, Grosor, B=Negro/Relleno)
         
-        # Flecha IZQUIERDA (Triángulo sólido que apunta hacia arriba)
-        # X: 150, Y: 100
-        zpl += "^FO150,100^GD150,150,10,B,R^FS" # Triángulo rellenado (La 'R' indica apuntar hacia arriba, aunque la implementación varía)
-        # Rectángulo vertical debajo (la base de la flecha)
-        zpl += "^FO200,250^GB50,150,5,B^FS"
+        # Flecha IZQUIERDA (Simulando una punta de flecha con rectángulos)
         
-        # Flecha DERECHA (Triángulo sólido que apunta hacia arriba)
-        # X: 350, Y: 100
-        zpl += "^FO350,100^GD150,150,10,B,R^FS" 
-        # Rectángulo vertical debajo (la base de la flecha)
-        zpl += "^FO400,250^GB50,150,5,B^FS"
+        # Tallo vertical
+        zpl += "^FO150,150^GB50,250,5,B^FS" 
+        # Rectángulo diagonal izquierda (simula la punta)
+        zpl += "^FO100,150^GB50,10,5,B^FS" 
+        # Rectángulo diagonal derecha (simula la punta)
+        zpl += "^FO200,150^GB50,10,5,B^FS" 
+        
+        
+        # Flecha DERECHA (Simulando una punta de flecha con rectángulos)
+        
+        # Tallo vertical
+        zpl += "^FO400,150^GB50,250,5,B^FS" 
+        # Rectángulo diagonal izquierda (simula la punta)
+        zpl += "^FO350,150^GB50,10,5,B^FS" 
+        # Rectángulo diagonal derecha (simula la punta)
+        zpl += "^FO450,150^GB50,10,5,B^FS" 
         
         # 2. Texto
         zpl += "^CF0,60"
-        zpl += "^FO50,450^FB500,1,0,C^FDESTE LADO^FS"
+        zpl += "^FO50,450^FB500,1,0,C^FDESTELADO^FS"
         zpl += "^CF0,60"
         zpl += "^FO50,520^FB500,1,0,C^FDARRIBA^FS"
         
