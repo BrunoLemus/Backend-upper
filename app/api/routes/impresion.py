@@ -126,7 +126,7 @@ def generate_zpl_for_tarima(data: list[LabelData]):
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 # =====================================================================
-# --- SOLUCIÓN AJUSTADA PARA IMPRESIÓN DE SÍMBOLOS CON ZPL NATIVO ---
+# --- SOLUCIÓN AJUSTADA (TEXTO SIMPLE Y SÍMBOLOS CLAROS) ---
 # =====================================================================
 
 class OtherLabelData(BaseModel):
@@ -138,7 +138,7 @@ class OtherLabelData(BaseModel):
 def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     """
     Genera el código ZPL para la etiqueta de símbolo seleccionada,
-    dibujando el símbolo con comandos ZPL limpios para evitar el amontonamiento.
+    usando texto simple (sin acentos) y comandos de dibujo claros.
     """
     
     # Configuración base de la etiqueta
@@ -148,11 +148,6 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
 
     if tipo_etiqueta == "fragil":
         # 1. Dibuja el símbolo del Vaso de Cristal (Frágil)
-        # Usamos texto con fuente B (grande) con codificación para caracteres especiales
-        # La fuente de 150 puntos es muy grande y simula un dibujo.
-        
-        # Símbolo: Se usa el carácter 'I' o 'A' muy grande para simular.
-        # Es mejor usar un gráfico (GB) simple para simular un vaso.
         
         # Cuerpo del vaso (caja)
         zpl += "^FO150,150^GB300,250,5^FS" 
@@ -161,43 +156,38 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
         # Línea central divisoria (efecto de cristal)
         zpl += "^FO150,275^GB300,2,2^FS" 
 
-        # 2. Texto
-        zpl += "^CF0,60" # Fuente más grande para el texto
-        # Posición Y 450, debajo del símbolo. El FB lo centra.
-        zpl += "^FO50,450^FB500,1,0,C^FDFRÁGIL^FS"
+        # 2. Texto AJUSTADO: Sin acento para evitar símbolos raros
+        zpl += "^CF0,60" 
+        zpl += "^FO50,450^FB500,1,0,C^FDFRAGIL^FS" # Sin acento
         zpl += "^CF0,40"
-        zpl += "^FO50,520^FB500,1,0,C^FDManejar con Cuidado^FS"
+        zpl += "^FO50,520^FB500,1,0,C^FDCUIDADO^FS" # Texto simple
 
     elif tipo_etiqueta == "hacia_arriba":
         # 1. Dibuja las dos flechas hacia arriba (This Way Up)
         
-        # Comando para Flecha Arriba (Triángulo) usando ^GFA (Graphic Field)
-        # Es mejor usar líneas si no se tiene el archivo de fuente de símbolos.
+        # Símbolo IZQUIERDO: Triángulo grande y claro que apunta hacia arriba
+        # ^GD: Graphic Diagonal/Triangle. ^GDw,h,t,c,s (Ancho, Alto, Grosor, Color, Estilo)
+        # Aunque ^GD no es siempre para triángulos, usaremos ^GB y ^GFA (Graphic Field/ASCII) para simular.
         
-        # Flecha IZQUIERDA: Dibuja un rectángulo vertical y un triángulo encima
-        # Rectángulo vertical: FO (100, 200), Altura 250, Ancho 10
-        zpl += "^FO150,200^GB10,250,10^FS" 
-        # Triángulo/Punta de flecha IZQUIERDA: Lineas inclinadas
-        zpl += "^FO150,200^GD100,100,10,B^FS" # Dibuja un triángulo sólido (comando ^GD no estándar, mejor usar líneas ^GB)
+        # Opción más segura y visible: Dos rectángulos grandes con triángulos de línea.
         
-        # Mejor opción: DIBUJAR PUNTAS CON LÍNEAS (más compatible)
-        # Punta Izquierda (Arriba)
-        zpl += "^FO100,200^GB100,10,10^FS" # Línea horizontal superior
-        zpl += "^FO100,200^GB10,100,10^FS" # Línea vertical izquierda
-        zpl += "^FO200,200^GB10,100,10^FS" # Línea vertical derecha
+        # Flecha Izquierda (Eje X=150)
+        zpl += "^FO150,150^GB100,250,10^FS" # Rectángulo vertical grueso
+        zpl += "^FO100,150^GB200,50,10^FS" # Rectángulo Horizontal (Base de la punta)
+        zpl += "^FO100,150^GB10,50,10^FS" # Pata izquierda
+        zpl += "^FO300,150^GB10,50,10^FS" # Pata derecha
         
-        # Flecha DERECHA (posición X 400)
-        # Rectángulo vertical: FO (400, 200), Altura 250, Ancho 10
-        zpl += "^FO400,200^GB10,250,10^FS" 
-        # Punta Derecha (Arriba)
-        zpl += "^FO350,200^GB100,10,10^FS" # Línea horizontal superior
-        zpl += "^FO350,200^GB10,100,10^FS" # Línea vertical izquierda
-        zpl += "^FO450,200^GB10,100,10^FS" # Línea vertical derecha
-
+        # Flecha Derecha (Eje X=350)
+        zpl += "^FO350,150^GB100,250,10^FS" # Rectángulo vertical grueso
+        zpl += "^FO300,150^GB200,50,10^FS" # Rectángulo Horizontal (Base de la punta)
+        zpl += "^FO300,150^GB10,50,10^FS" # Pata izquierda
+        zpl += "^FO500,150^GB10,50,10^FS" # Pata derecha
         
         # 2. Texto
         zpl += "^CF0,60"
-        zpl += "^FO50,500^FB500,1,0,C^FDESTELADO ARRIBA^FS"
+        zpl += "^FO50,450^FB500,1,0,C^FDESTELADO^FS"
+        zpl += "^CF0,60"
+        zpl += "^FO50,520^FB500,1,0,C^FDARRIBA^FS"
         
     else:
         return ""
