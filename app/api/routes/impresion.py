@@ -6,9 +6,9 @@ from typing import Literal
 
 router = APIRouter() 
 
-# --- MODELOS Y FUNCIONES EXISTENTES (SIN MODIFICAR) ---
+# --- MODELOS YA EXISTENTES ---
 class LabelData(BaseModel):
-    # ... (El contenido de LabelData se mantiene intacto)
+    """Define el esquema de datos completo para una etiqueta."""
     paqueteria: str
     factura: str
     num_cajas: int = Field(..., gt=0)
@@ -23,67 +23,112 @@ class LabelData(BaseModel):
     qr_data: str 
     is_tarima: bool = False 
 
+# --- FUNCIÓN YA EXISTENTE ---
 def generate_zpl_final_label(data: LabelData) -> str:
-    # ... (El contenido de generate_zpl_final_label se mantiene intacto)
+    """
+    Genera el código ZPL, usando el campo is_tarima para ajustar el texto del encabezado,
+    y el campo paqueteria para decidir el contenido (completo o básico).
+    """
     
     PAQUETERIAS_COMPLETAS = ["Estafeta", "Paquetexpress"]
     imprimir_completo = data.paqueteria in PAQUETERIAS_COMPLETAS
     
-    # ... (ZPL code generation remains the same)
-    
+
     title_type = "TARIMA" if data.is_tarima else "CAJA"
+    
     print(f" 🔎 Generando ZPL ({title_type} | QR Condicional) para Factura: {data.factura} | Completo: {imprimir_completo}") 
-    zpl = "^XA^MMT^PW606^LL606" 
+    
+    zpl = "^XA"
+    
+    zpl += "^MMT^PW606^LL606" 
+    
+    
+    
     qr_data_list = []
+    
+ 
     qr_data_list.append(f"PAQUETERIA:{data.paqueteria}")
     qr_data_list.append(f"FACTURA:{data.factura}")
     qr_data_list.append(f"{title_type.upper()}:{data.caja_actual}_de_{data.num_cajas}") 
     qr_data_list.append(f"PIEZAS:{data.piezas}")
+    
     if imprimir_completo:
+        
         qr_data_list.append(f"DIMENSIONES:{data.ancho}x{data.alto}x{data.largo}cm")
         qr_data_list.append(f"VOLUMETRICO:{data.peso_volumetrico:.2f}kg")
         qr_data_list.append(f"PESO:{data.peso:.2f}kg")
+        
     qr_content = "-".join(qr_data_list) 
+    
+
     qr_size = 4 if imprimir_completo else 5
     qr_y_position = 360 if imprimir_completo else 400
     qr_x_position = 360 
+    
+    
     zpl += "^CF0,50" 
     zpl += f"^FO23,20^FB560,1,0,C^FD{data.paqueteria.upper()}^FS"  
+    
     zpl += "^FO10,80^GB586,2,2^FS" 
+
+
     zpl += "^CF0,80" 
     zpl += f"^FO23,100^FB560,1,0,C^FD{title_type}: {data.caja_actual} de {data.num_cajas}^FS" 
+    
+    
+    
     zpl += "^CF0,40" 
     zpl += f"^FO20,230^FDFactura: {data.factura}^FS"
+    
+
     y_current = 280
+    
+ 
     zpl += "^CF0,40" 
     zpl += f"^FO20,{y_current}^FDPiezas: {data.piezas}^FS"
     y_current += 45 
+    
     if imprimir_completo:
+        
         zpl += "^CF0,35" 
         zpl += f"^FO20,{y_current}^FDDims: {data.ancho}x{data.alto}x{data.largo} cm^FS"
         y_current += 40 
+        
+        
         zpl += "^CF0,35" 
         zpl += f"^FO20,{y_current}^FDPeso Real: {data.peso:.2f} kg^FS"
         y_current += 40 
+    
         zpl += "^CF0,35" 
         zpl += f"^FO20,{y_current}^FDPeso Vol.: {data.peso_volumetrico:.2f} kg^FS"
         y_current += 40 
+ 
     zpl += f"^FO{qr_x_position},{qr_y_position}^BQN,2,{qr_size}^FDQA,{qr_content}^FS"
-    zpl += "^PQ1^XZ" 
+    
+ 
+    zpl += "^PQ1" 
+    zpl += "^XZ" 
+    
     return zpl
 
 
+# --- ENDPOINTS YA EXISTENTES ---
 @router.post("/generate_caja")
 def generate_zpl_for_caja(data: list[LabelData]):
+    """Genera el ZPL completo a partir de una lista de datos de Cajas."""
+    
     for label in data:
         label.is_tarima = False
+    
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 
 @router.post("/generate_tarima") 
 def generate_zpl_for_tarima(data: list[LabelData]):
+
     for label in data:
         label.is_tarima = True
+        
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 # =====================================================================
@@ -105,7 +150,7 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     # Configuración base de la etiqueta
     zpl = "^XA"
     zpl += "^MMT^PW606^LL606" # Etiqueta de 4x6"
-    zpl += "^FO10,10^GB586,586,3^FS" # Marco principal (como en la imagen)
+    zpl += "^FO10,10^GB586,586,3^FS" # Marco principal 
 
     if tipo_etiqueta == "fragil":
         # Símbolo FRÁGIL (Mantenido para evitar errores de codificación)
@@ -125,40 +170,25 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
 
     elif tipo_etiqueta == "hacia_arriba":
         # 1. Dibuja la BASE HORIZONTAL gruesa (como en la imagen)
-        zpl += "^FO50,400^GB500,40,40,B^FS" # X=50, Y=400, Ancho=500, Alto=40, Grosor=40, Relleno=B (sólido)
+        zpl += "^FO50,400^GB500,40,40,B^FS" # Base sólida
         
         # 2. Dibuja las DOS FLECHAS SÓLIDAS Y GRUESAS (usando rectángulos rellenos)
         
-        # Parámetros para las flechas: Ancho del tallo=50, Altura del tallo=200
-        TALLO_H = 200
-        TALLO_W = 50
-        PUNTA_W = 100
-        PUNTA_H = 50
-        
         # FLECHA IZQUIERDA
-        # Tallo vertical
-        zpl += "^FO140,200^GB50,200,50,B^FS" # X=140, Y=200, W=50, H=200 (sólido)
-        # Punta de flecha (Rectángulo superior horizontal para la forma sólida)
-        # ^GB ancho, alto, grosor, color, redondeo (solo se usa 'B' para relleno sólido)
-        # Se necesita un triángulo. La forma más simple es usar ^GF o una fuente, pero usaremos el método más compatible: dibujar un RECTÁNGULO MUY ANCHO y luego ajustar la forma con un rectangulo horizontal encima.
-        
-        # Tallo
-        zpl += "^FO150,150^GB50,250,50,B^FS" # X=150
-        # Rectángulo para la punta ancha (simulando la base del triángulo)
-        zpl += "^FO100,150^GB150,50,50,B^FS" # X=100 (Cubre 150 puntos de ancho)
+        # Tallo vertical (Base)
+        zpl += "^FO140,150^GB70,250,70,B^FS" # X=140, W=70, H=250 (Grueso)
+        # Punta de flecha (Rectángulo superior para la forma sólida)
+        zpl += "^FO100,100^GB150,50,50,B^FS" # X=100, W=150, H=50
         
         # FLECHA DERECHA
-        # Tallo
-        zpl += "^FO400,150^GB50,250,50,B^FS" # X=400
-        # Rectángulo para la punta ancha
-        zpl += "^FO350,150^GB150,50,50,B^FS" # X=350
-        
-        # NOTA: En ZPL, lograr un triángulo perfecto con ^GB es imposible. 
-        # La solución de rectángulos anchos es el mejor compromiso para un gráfico sólido sin usar ^GFA.
+        # Tallo vertical (Base)
+        zpl += "^FO390,150^GB70,250,70,B^FS" # X=390, W=70, H=250 (Grueso)
+        # Punta de flecha (Rectángulo superior para la forma sólida)
+        zpl += "^FO350,100^GB150,50,50,B^FS" # X=350, W=150, H=50
 
         # 3. Texto
         zpl += "^CF0,60"
-        zpl += "^FO50,450^FB500,1,0,C^FDESTELADO^FS"
+        zpl += "^FO50,450^FB500,1,0,C^FDESTE LADO^FS"
         zpl += "^CF0,60"
         zpl += "^FO50,520^FB500,1,0,C^FDARRIBA^FS"
         
@@ -172,15 +202,16 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
 
 @router.post("/generate_other_label")
 def generate_zpl_for_other_labels(data: OtherLabelData):
-    # ... (El contenido de este endpoint se mantiene intacto)
-    
-    # Generar el bloque ZPL base para una sola etiqueta
+    """
+    Genera el ZPL para etiquetas Frágil o Hacia Arriba.
+    El ZPL se genera con comandos de texto/gráficos ZPL NATIVOS, no con imágenes.
+    """
+  
     zpl_single_label = generate_other_label_zpl(data.tipo_etiqueta)
     
-    # Reemplazar ^XZ (Fin de formato) con el comando ^PQ para la cantidad requerida
+
     if zpl_single_label:
-        # Se asume que generate_other_label_zpl ya generó ^XZ al final.
-        # Simplemente se cambia el ^XZ final por ^PQ{cantidad}^XZ
+        
         final_zpl = zpl_single_label.replace("^XZ", f"^PQ{data.cantidad}^XZ")
     else:
         return {"zpl_code": "", "error": "Tipo de etiqueta no válido."}
