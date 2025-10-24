@@ -23,7 +23,7 @@ class LabelData(BaseModel):
     qr_data: str 
     is_tarima: bool = False 
 
-# --- FUNCIÓN YA EXISTENTE ---
+# --- FUNCIÓN YA EXISTENTE (NO MODIFICADA) ---
 def generate_zpl_final_label(data: LabelData) -> str:
     """
     Genera el código ZPL, usando el campo is_tarima para ajustar el texto del encabezado,
@@ -112,7 +112,7 @@ def generate_zpl_final_label(data: LabelData) -> str:
     return zpl
 
 
-# --- ENDPOINTS YA EXISTENTES ---
+# --- ENDPOINTS YA EXISTENTES (NO MODIFICADOS) ---
 @router.post("/generate_caja")
 def generate_zpl_for_caja(data: list[LabelData]):
     """Genera el ZPL completo a partir de una lista de datos de Cajas."""
@@ -144,7 +144,7 @@ class OtherLabelData(BaseModel):
 def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     """
     Genera el código ZPL para la etiqueta de símbolo seleccionada,
-    dibujando el símbolo con ZPL nativo (texto grande y líneas), NO imágenes.
+    dibujando el símbolo con ZPL nativo (texto grande y líneas).
     """
     
     # 1. Configuración de etiqueta y caja
@@ -153,45 +153,35 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     zpl += "^FO10,10^GB586,586,3^FS" # Dibuja un marco grande
 
     if tipo_etiqueta == "fragil":
-        # Dibuja la palabra FRÁGIL en grande y un borde para simular un símbolo.
-        zpl += "^FO20,100^GB550,450,5^FS" # Caja interior
-        zpl += "^CF0,100" # Usa la fuente 'A' (Zebra Default) con altura de 100
-        zpl += "^FO50,150^FB500,1,0,C^FDFRÁGIL^FS"
-        zpl += "^CF0,40"
-        zpl += "^FO50,300^FB500,1,0,C^FDManejar con Cuidado^FS"
+        # Dibuja la palabra FRÁGIL en grande y simula un vaso de cristal (ISO 780)
+        
+        # 2. Dibujar la simulación del Vaso
+        zpl += "^FO150,150^GB300,300,5^FS" # Caja grande (Cuerpo del vaso/símbolo)
+        zpl += "^FO100,400^GB400,50,5^FS" # Base del vaso
+        zpl += "^FO250,150^GB100,300,B,3^FS" # Parte interior/central (efecto de cristal)
+        
+        # 3. Texto
+        zpl += "^CF0,40" # Fuente más pequeña para el texto
+        zpl += "^FO50,500^FB500,1,0,C^FDFRÁGIL - MANEJAR CON CUIDADO^FS"
 
     elif tipo_etiqueta == "hacia_arriba":
-        # Dibuja dos flechas grandes usando gráficos de caja (simulación) o texto grande.
-        # Opción 1: Flechas con texto (más simple y compatible)
-        # Usamos fuente ZPL 'D' que a veces incluye flechas o un carácter que simula flechas.
-        # Si la fuente 'D' no funciona, se usa un texto simple.
+        # Dibuja las dos flechas hacia arriba (ISO 780) con líneas ZPL
         
-        # Símbolo de flecha (usando la fuente 0/A grande para texto)
-        zpl += "^CF0,200" # Fuente grande
-        zpl += "^FO50,50^FB500,1,0,C^FD^FS" # Línea vacía para centrar
-        
-        # Intenta usar la fuente 0,150 (Arial/Swiss) para simular una flecha (requiere fuente cargada)
-        # Opción más segura: usar solo texto y un borde
-        zpl += "^FO50,100^A0N,200,200^FD⬆️^FS" # Esto solo funciona si el font soporta Unicode, mejor usar texto.
+        # 2. Dibujar las dos flechas con líneas y triángulos
+        # Flecha IZQUIERDA
+        zpl += "^FO100,50^GB10,350,10^FS" # Línea vertical
+        zpl += "^FO60,50^GBA,100,100^FS" # Triángulo superior
+        zpl += "^FO140,50^GBA,100,100^FS" # Triángulo inferior
 
-        # Mejor Opción: usar texto muy grande y simple
-        zpl += "^CF0,150"
-        zpl += "^FO50,50^FB500,1,0,C^FDESTELADO^FS"
-        zpl += "^FO50,220^FB500,1,0,C^FDD^FS" # D de "Down" invertido
-        zpl += "^CF0,120"
-        zpl += "^FO50,400^FB500,1,0,C^FDARRIBA^FS"
+        # Flecha DERECHA (posición X 350)
+        zpl += "^FO400,50^GB10,350,10^FS" # Línea vertical
+        zpl += "^FO360,50^GBA,100,100^FS" # Triángulo superior
+        zpl += "^FO440,50^GBA,100,100^FS" # Triángulo inferior
         
-        # Dibuja las flechas usando líneas (más parecido a una imagen)
-        zpl += "^FO150,50^GB20,300,5^FS" # Línea vertical izquierda
-        zpl += "^FO400,50^GB20,300,5^FS" # Línea vertical derecha
+        # 3. Texto
+        zpl += "^CF0,40"
+        zpl += "^FO50,500^FB500,1,0,C^FDESTELADO ARRIBA^FS"
         
-        # Dibuja puntas de flecha simples con cajas
-        zpl += "^FO140,50^GB40,20,5^FS" # Punta izquierda 1
-        zpl += "^FO140,330^GB40,20,5^FS" # Punta izquierda 2
-        zpl += "^FO390,50^GB40,20,5^FS" # Punta derecha 1
-        zpl += "^FO390,330^GB40,20,5^FS" # Punta derecha 2
-
-
     else:
         return ""
 
@@ -219,8 +209,5 @@ def generate_zpl_for_other_labels(data: OtherLabelData):
         return {"zpl_code": "", "error": "Tipo de etiqueta no válido."}
 
     print(f"✅ Generado ZPL para {data.cantidad} etiquetas de tipo: {data.tipo_etiqueta}")
-    
-    # **NOTA IMPORTANTE:** En una implementación real, aquí tendrías que enviar
-    # el 'final_zpl' a la impresora Zebra (e.g., por socket TCP/IP).
     
     return {"zpl_code": final_zpl}
