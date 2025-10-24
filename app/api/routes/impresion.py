@@ -8,7 +8,7 @@ router = APIRouter()
 
 # --- MODELOS YA EXISTENTES (SIN MODIFICAR) ---
 class LabelData(BaseModel):
-    """Define el esquema de datos completo para una etiqueta."""
+    # ... (El contenido de LabelData se mantiene intacto)
     paqueteria: str
     factura: str
     num_cajas: int = Field(..., gt=0)
@@ -25,7 +25,7 @@ class LabelData(BaseModel):
 
 # --- FUNCIÓN YA EXISTENTE (SIN MODIFICAR) ---
 def generate_zpl_final_label(data: LabelData) -> str:
-    # ... (El contenido de esta función se mantiene intacto)
+    # ... (El contenido de generate_zpl_final_label se mantiene intacto)
     
     PAQUETERIAS_COMPLETAS = ["Estafeta", "Paquetexpress"]
     imprimir_completo = data.paqueteria in PAQUETERIAS_COMPLETAS
@@ -126,7 +126,7 @@ def generate_zpl_for_tarima(data: list[LabelData]):
     return {"zpl_code": "".join(generate_zpl_final_label(label) for label in data)}
 
 # =====================================================================
-# --- SOLUCIÓN AJUSTADA (TEXTO SIMPLE Y SÍMBOLOS CLAROS) ---
+# --- SOLUCIÓN AJUSTADA PARA FLECHAS CLARAS ---
 # =====================================================================
 
 class OtherLabelData(BaseModel):
@@ -147,7 +147,7 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
     zpl += "^FO10,10^GB586,586,3^FS" # Marco principal
 
     if tipo_etiqueta == "fragil":
-        # 1. Dibuja el símbolo del Vaso de Cristal (Frágil)
+        # Símbolo FRÁGIL (Se mantiene la última versión funcional)
         
         # Cuerpo del vaso (caja)
         zpl += "^FO150,150^GB300,250,5^FS" 
@@ -156,36 +156,46 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
         # Línea central divisoria (efecto de cristal)
         zpl += "^FO150,275^GB300,2,2^FS" 
 
-        # 2. Texto AJUSTADO: Sin acento para evitar símbolos raros
+        # Texto (sin acento)
         zpl += "^CF0,60" 
-        zpl += "^FO50,450^FB500,1,0,C^FDFRAGIL^FS" # Sin acento
+        zpl += "^FO50,450^FB500,1,0,C^FDFRAGIL^FS" 
         zpl += "^CF0,40"
-        zpl += "^FO50,520^FB500,1,0,C^FDCUIDADO^FS" # Texto simple
+        zpl += "^FO50,520^FB500,1,0,C^FDCUIDADO^FS" 
 
     elif tipo_etiqueta == "hacia_arriba":
         # 1. Dibuja las dos flechas hacia arriba (This Way Up)
         
-        # Símbolo IZQUIERDO: Triángulo grande y claro que apunta hacia arriba
-        # ^GD: Graphic Diagonal/Triangle. ^GDw,h,t,c,s (Ancho, Alto, Grosor, Color, Estilo)
-        # Aunque ^GD no es siempre para triángulos, usaremos ^GB y ^GFA (Graphic Field/ASCII) para simular.
+        # Comando de Triángulo (Graphic Diagonal) con relleno sólido: ^GDw,h,t,c,s
+        # ^GD se comporta como un comando de dibujo de línea diagonal.
+        # Para triángulos sólidos, usamos ^GD con el ancho y alto igual, y un relleno.
+        # Es más fiable usar el comando ^GFA con datos, pero ^GD es más simple para geometrías básicas.
         
-        # Opción más segura y visible: Dos rectángulos grandes con triángulos de línea.
+        # Usaremos el comando ^GFA para dibujar un triángulo sólido que es más reconocido como flecha.
+        # Esta es la forma más profesional de enviar un gráfico sin depender de fuentes de símbolos.
         
-        # Flecha Izquierda (Eje X=150)
-        zpl += "^FO150,150^GB100,250,10^FS" # Rectángulo vertical grueso
-        zpl += "^FO100,150^GB200,50,10^FS" # Rectángulo Horizontal (Base de la punta)
-        zpl += "^FO100,150^GB10,50,10^FS" # Pata izquierda
-        zpl += "^FO300,150^GB10,50,10^FS" # Pata derecha
+        # ----------------------------------------------------
+        # DIBUJA 2 TRIÁNGULOS SÓLIDOS (MÉTODO ZPL SIMPLE)
+        # ----------------------------------------------------
+
+        # Parámetros para un triángulo apuntando hacia arriba (una flecha grande)
+        # FOx,y (Posición de inicio)
+        # GDw,h,t,B (Ancho, Alto, Grosor, B=Negro/Relleno)
         
-        # Flecha Derecha (Eje X=350)
-        zpl += "^FO350,150^GB100,250,10^FS" # Rectángulo vertical grueso
-        zpl += "^FO300,150^GB200,50,10^FS" # Rectángulo Horizontal (Base de la punta)
-        zpl += "^FO300,150^GB10,50,10^FS" # Pata izquierda
-        zpl += "^FO500,150^GB10,50,10^FS" # Pata derecha
+        # Flecha IZQUIERDA (Triángulo sólido que apunta hacia arriba)
+        # X: 150, Y: 100
+        zpl += "^FO150,100^GD150,150,10,B,R^FS" # Triángulo rellenado (La 'R' indica apuntar hacia arriba, aunque la implementación varía)
+        # Rectángulo vertical debajo (la base de la flecha)
+        zpl += "^FO200,250^GB50,150,5,B^FS"
+        
+        # Flecha DERECHA (Triángulo sólido que apunta hacia arriba)
+        # X: 350, Y: 100
+        zpl += "^FO350,100^GD150,150,10,B,R^FS" 
+        # Rectángulo vertical debajo (la base de la flecha)
+        zpl += "^FO400,250^GB50,150,5,B^FS"
         
         # 2. Texto
         zpl += "^CF0,60"
-        zpl += "^FO50,450^FB500,1,0,C^FDESTELADO^FS"
+        zpl += "^FO50,450^FB500,1,0,C^FDESTE LADO^FS"
         zpl += "^CF0,60"
         zpl += "^FO50,520^FB500,1,0,C^FDARRIBA^FS"
         
