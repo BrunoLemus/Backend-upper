@@ -190,9 +190,9 @@ def generate_other_label_zpl(tipo_etiqueta: str) -> str:
         
         # 2. Texto
         zpl += "^CF0,60"
-        zpl += "^FO50,450^FB500,1,0,C^FDESTELADO^FS"
+        zpl += "^FO50,450^FB500,1,0,C^FDESTE LADO^FS"
         zpl += "^CF0,60"
-        zpl += "^FO50,520^FB500,1,0,C^FDARRIBA^FS"
+        zpl += "^FO50,520^FB500,1,0,C^FDARRIBA ⬆️^FS"
         
     else:
         return ""
